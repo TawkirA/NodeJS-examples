@@ -1,0 +1,721 @@
+JS Coding problems
+=================
+1. What would be the output of below code
+	const array = [10, 20, 30, 40];
+	const result = array.map((num) => num / 2).filter((num) => num >= 15);
+	console.log(result);
+
+Ans - [15, 20]
+
+2. What would be the output
+	 let counter = 0;
+	for (var i = 1; i <= 10; i++) {
+  		counter+= i;
+	}
+	console.log(counter);
+	console.log(i);
+
+Ans - 55
+	 11
+
+3. What will be the output of 
+	setTimeout(function () {
+  		console.log("This will be executed after 3 seconds");
+	}, 3000);
+	clearTimeout();
+
+Ans - It will print the log item because setTimeout added the function in queue before clearTimeout.
+
+4. Whats the output
+ 	const promise1 = Promise.resolve("One");
+	const promise2 = new Promise((resolve) => setTimeout(() => resolve("Two"), 1000));
+	const promise3 = Promise.reject("Three");
+ 	Promise.allSettled([promise1, promise2, promise3]).then((results) => console.log(results));
+
+Ans - 	(3) [{...}, {...}, {...}]
+0: (2) {status: "fulfilled", value: "One"}
+status : "fulfilled"
+value: "One"
+1:(2) {status: "fulfilled", value: "Two"}
+status: "fulfilled"
+value: "Two"
+2: (2) {status: "rejected", reason: "Three"...}
+status: "rejected"
+reason: "Three"
+
+5. Whats the output
+const obj = {
+  name: "Conner",
+  age: 27,
+  greet: () => {
+	console.log(`Hey, my name is ${this.name}`);
+  },
+};
+obj.greet();
+
+Ans - Hey, my name is undefined.
+	undefined is coming because greet in an arrow funtion which has block level scope and it cannot accese name.
+
+6. Whats the output
+const object1 = {
+  prop1: "value1",
+  prop2: {
+	prop3: "value3",
+  },
+};
+ const newObj = { ...obj };
+newObj.prop2.prop3 = "newValue3";
+console.log(object1.prop2.prop3);
+
+Ans - newValue3
+Because Object is reference type
+
+7. Whats the output
+class Bird {
+  constructor(name) {
+	this.name = name;
+  }
+  speak() {
+	console.log(`${this.name} makes a noise.`);
+  }
+}
+ class Crow extends Bird{
+  speak() {
+	super.speak();
+	console.log(`${this.name} sings.`);
+  }
+}
+ const crow = new Crow("Tim");
+crow.speak();
+
+Ans - Tim makes a noise.
+Tim sings.
+
+========================================================================================================================================================
+
+JavaScript -
+
+1. What is the output of the following code?
+	var dwayne = {}, daniel = { firstName: 'Daniel'}, jason = {key: 'jason'};
+
+	dwayne[daniel]=123;
+	dwayne[jason]=456;
+
+	console.log(dwayne[daniel]);
+
+Ans - 456
+         When setting an object property, JavaScript will implicitly stringify the parameter value. In this case, since daniel and jason are both objects, they will both be converted to "[object Object]". As a result, dwayne[dani] and  dwayne[jason] are both equivalent to dwayne["[object Object]"] and can be used interchangeably. Therefore, setting or referencing dwayne[jason] is precisely the same as setting or referencing dwayne[daniel].
+==================================================================================================================================================================================
+
+2. What is the output of following code 
+	var v = 1;
+
+	function outer() {
+    		var b = 2;
+    		function inner() {
+        		b++;
+        		var b = 3;
+        		console.log(b)
+    		}
+    		inner()
+	}
+
+	outer()
+
+Ans  - 3
+          Because of variable scioping;
+==================================================================================================================================================================================
+
+3. What is the output of following code
+	const func = (function(a){
+  				delete a;
+  				return a;
+			      })(5);
+
+console.log(func);
+
+Ans - 5
+         The delete operator is used to delete properties from an object. Here a is not an object but a local variable. delete operators don't affect local variables.
+==================================================================================================================================================================================
+
+4. What is the output of following code
+    console.log({a:1} == {a:1});
+    console.log({a:1} === {a:1});
+
+Ans - false;
+         false;
+	Objects are compared with reference. Here both objects reference are different.
+==================================================================================================================================================================================
+
+5. Which approach is better and why?
+    const jamesBond = {
+        firstName: "Daniel",
+        lastName: "Craig",
+        getFullName: function () {
+           return `${this.firstName} ${this.lastName}`.trim();
+        }
+   };
+   jamesBond.getFullName();
+
+	OR
+  
+   class Person {
+       constructor(firstName, lastName) {
+           this.firstName = firstName;
+           this.lastName = lastName;
+       }
+    }
+    Person.prototype.getFullName = function () {
+        return `${this.firstName} ${this.lastName}`.trim();
+    };
+    const jamesBond = new Person("Daniel", "Craig");
+    jamesBond.getFullName();
+
+Ans - Second approach is better since in the first approach, a closure is maintained for each copy of the object containing getFullName method. While in the second approach, the method is registered in the prototype rather than in every object. Thus, it is a more memory efficient approach.
+==================================================================================================================================================================================
+
+6. What is the difference between Object and Map?
+
+Ans - Objects can have only strings and symbols as their keys while Map can have primitive, functions or even objects as their keys.
+	 Keys in Map are ordered but not in objects.
+	 Size of Map can be easily determined using size property while it’s relatively hard for objects.
+	 A Map may perform better in scenarios involving frequent addition and removal of key pairs.
+
+==================================================================================================================================================================================
+
+7. write a function in JavaScript to merge two objects without overwriting existing properties?
+
+Ans - const mergeObjects = (obj1, obj2) => ({ ...obj1, ...obj2 });
+	This function utilizes the spread (...) operator within an object literal to merge the properties of obj1 and obj2. The order is important; properties of obj2 will overwrite properties of obj1 with the same name. This one-liner is effective for creating a new object that contains the combined properties of both objects without modifying the original objects.
+
+8. When you create a function inside a method, what does the “this” keyword refer to when used in that function
+
+Ans - Inside of a function, the “this” keyword always refers to the window object. On the other hand, when a function is a property of an object, the “this” keyword always refers to the object to which that method belongs.
+	Example - 
+			var myObject  = {
+   					color : "red",
+   					test : function(){
+      						 function testThis(){
+        						console.log(this.color);    //undefined
+        						console.log(window === this);    //true
+      						};
+     						testThis();
+     						console.log(this.color); //red
+     						console.log(window === this);   //false
+     						return "done!"
+   					}
+			};
+			myObject.test();
+
+9. How to Compare 2 Objects in JavaScript?
+
+Ans - Objects are reference types so you can’t just use === or == to compare 2 objects. One quick way to compare if 2 objects have the same key value, is using JSON.stringify.
+	 const obj1 = {Name: "Rahim",City: 'abc',Country: "India" };
+	 const obj2 = {Name: "Rahim", City:'abc',Country: "India" };
+	 document.write(JSON.stringify(obj1)===JSON.stringify(obj2)); // true
+
+	Another way is ES6 for comparing 2 objects
+
+	const k1 = { fruit: '🥝' };
+	const k2 = { fruit: '🥝' };
+
+	Object.entries(k1).toString() === Object.entries(k2).toString();  // true
+
+10. Difference between object.create and object creation with the new operator?
+
+Ans - 1. Objects created using object literal i.e. with object.create
+	 Since these are singletons, a change to an object persists throughout the script. A change in one instance will affect all the instances of the object.
+
+	 var student = {
+      		name: "Ravi"
+   	}
+	var newStudent = student;
+   		document.write("student name = " + student.name); // Ravi
+   		document.write("new student name = " + newStudent.name); // Ravi
+	newStudent.name = "kumar";
+   		document.write("student name = " + student.name); // Kumar
+   		document.write("new student name = " + newStudent.name); //Kumar
+
+	2. New operator
+	Object-defined with a function constructor lets you have multiple instances of that object. This means a change made to one instance, will not affect other instances.
+	
+	var stu = function() {
+      		this.name= "Ravi"
+	}
+	var newStudent = new stu();
+	var newStudent2 = new stu();
+   	document.write("student name = " + newStudent.name); // Ravi
+   	document.write("new student name = " + newStudent2.name); // Ravi
+	newStudent2.name = "kumar";
+   	document.write("student name = " + student.name); // Ravi
+   	document.write("new student name = " + newStudent.name); //Kumar
+	This is due to the important difference that the 2nd method actually runs constructor code, whereas Object.create will not execute the constructor code.
+	
+	function Dog(){
+    		this.eat = 'meat';
+	};
+
+	Dog.prototype.child = 'Pups';
+	var maddie = new Dog();
+	var buddy = Object.create(Dog.prototype);
+
+	//Using Object.create()
+	console.log(buddy.eat); //Output is undefined
+	console.log(buddy.child); //Output is Pups.
+
+	//Using New Keyword
+	console.log(maddie.eat); //Output is meat
+	console.log(maddie.child); //Output is Pups.
+
+	Notice the output of buddy.eat is undefined. Even though Object.create() sets its prototype to Dog, buddy does not have access to this.eat in the constructor.
+
+=============================================================================================================================================
+TOPICS TO LEARN
+=================
+cookie
+javascript code to do security validation
+javascript code to sanitize value
+SOLID Principal
+DRY
+Dependency Injection
+SDLC
+How dependency injection is required for Testing
+Difference between for-in and for-of loop
+Difference between ng-template and ng-content
+What is the difference between px, rem etc. in css
+
+=============================================================================================================================================
+
+Write a JavaScript program to find a pair of elements (indices of the two numbers) in a given array whose sum equals a specific target number.
+Input: numbers= [10,20,10,40,50,60,70], target=50
+
+function targetNum(numbers,target )
+{
+var mapped=[];
+var index=[];
+    for(x=0;x<numbers.length;x++)
+     {
+     if(mapped[numbers[x]]!=null)
+        {
+            ind=mapped[numbers[x]];
+            index[0]=ind;
+            index[1]=x;
+            break;
+        }else{
+            mapped[target-numbers[x]]=x;
+        }
+     
+     }return index
+}
+console.log(targetNum([10,20,40,50,60,70],50));
+
+Q. Write a function which accepts a string argument and returns the count of characters between
+   the first and last character 'X'.
+
+Q. Design a Calulator interface for 2 number inputs which can perform sum, difference, product and
+   dividend whenever invoked on the same interface.
+Sol - function calculator(val1, val2) {
+    
+    function add() {
+        return val1 + val2;
+    }
+    
+    function sub() {
+        return val1 - val2;
+    }
+    
+    function mul() {
+        return val1 * val2;
+    }
+    
+    function div() {
+        return Math.floor(val1 / val2);
+    }
+    
+    return {
+     add,
+     sub,
+     mul,
+     div
+    }
+}
+
+console.log(calculator(3, 5).add());
+console.log(calculator(7, 5).sub());
+console.log(calculator(3, 5).mul());
+
+Q. Design a private counter function which exposes increment and retrive functionalities.
+
+Sol - function counter() {
+    let count = 0;
+    return {
+        increment: function(val = 1) {
+            count += val;
+        },
+        retrieve: function() {
+            return count;
+        }
+    }
+}
+
+const getCounter = counter();
+console.log(getCounter.increment());
+console.log(getCounter.increment());
+console.log(getCounter.retrieve());
+console.log(getCounter.increment(5));
+console.log(getCounter.retrieve());
+
+Q. Write a function which helps to achieve multiply(a)(b) and returns product of a and b.
+Sol - function product(num1) {
+    return function (num2) {
+        return num1 * num2;
+    }
+}
+
+console.log(product(4)(3)); // 12
+
+// ========================================================================================
+
+//Q1. Can you write a function in JavaScript to reverse the order of words in a given string
+// Input - Here, we will explore 10 frequently asked JavaScript coding interview questions
+// Output - questions interview coding JavaScript asked frequently 10 explore will we Here,
+
+// Sol-1. Using inbuit JS method reverese
+const str = "Here, we will explore 10 frequently asked JavaScript coding interview questions";
+
+function reverseStr(str) {
+  return str.split(" ").reverse().join(" ");
+}
+
+// const result = reverseStr(str);
+// console.log('RES - ', result);
+
+// Sol-2. Without using inbuit method
+function reverseString(str) {
+  const strArr = str.split(' ');
+  const finalRes = [];
+  console.log(strArr);
+  for(let i=strArr.length-1; i >= 0; i--) {
+    finalRes.push(strArr[i]);
+  }
+  return finalRes.join(' ');
+}
+
+// const res = reverseString(str)
+// console.log(res);
+
+// ===================================================================================================
+
+// Q2. Can you write a function in JavaScript to remove duplicate elements from an array?
+// Input - [2, 3, 2, 1, 4, 5, 1, 4, 33, 32, 1]
+// Output - [2, 3, 1, 4, 5, 33, 32]
+
+// Sol-1. With inbuit JS method Set
+function removeDup(arr) {
+    return [...new Set(arr)];
+}
+
+// const result = removeDup([2, 3, 2, 1, 4, 5, 1, 4, 33, 32, 1]);
+// console.log(result);
+
+// Sol-2. 
+function removeDuplicates(arr) {
+    const itemCntMap = new Map();
+    const uniqueArr = [];
+    arr.forEach(item => {
+        if (!itemCntMap.get(item)) {
+            itemCntMap.set(item, 1)
+            uniqueArr.push(item)
+        }
+    })
+    return uniqueArr;
+}
+
+// const result = removeDuplicates([2, 3, 2, 1, 4, 5, 1, 4, 33, 32, 1]);
+// console.log('RES - ', result)
+
+// ============================================================
+// Q3. Can you write a function in JavaScript to merge two objects without overwriting existing properties?
+
+// Sol-1. 
+const obj1 = { name: 'ABC', email: 'abc@abc.com', contact: '1234567890' }
+const obj2 = { name: 'ABC', city: 'Kolkata', country: 'India' }
+
+function mergeObjects(obj1, obj2) {
+    return { ...obj1, ...obj2 }
+}
+
+// const result = mergeObjects(obj1, obj2)
+// console.log('RES - ', result);
+
+// ============================================================
+
+// Q4. Can you write a function in JavaScript to get the current date in the format “YYYY-MM-DD”?
+
+// Sol-1.
+function getDate() {
+    const currentDate = new Date();
+    const year = currentDate.getFullYear();
+    const month = currentDate.getMonth() + 1 < 10 ? '0'+ (currentDate.getMonth() + 1) : currentDate.getMonth() + 1;
+    const day = currentDate.getDate() < 10 ? '0'+currentDate.getDate() : currentDate.getDate(); 
+    return `${year}-${month}-${day}`
+}
+
+// const res = getDate();
+// console.log(res)
+
+// ===========================================================
+// Q5. Can you write a function in JavaScript to calculate the cumulative sum of an array?
+// Input - [10, 15, 20, 25, 30]
+// Output - [10, 25, 45, 70, 100]
+function cumSum(arr) {
+    for(let i=1; i<arr.length; i++) {
+        arr[i] = arr[i] + arr[i-1];
+    }
+    return arr;
+}
+
+// const res = cumSum([10, 15, 20, 25, 30]);
+// console.log('RES - ', res);
+
+// ===========================================================
+// Q6. Can you write a function in JavaScript to split an array into chunks of a specified size?
+function chunkArray(arr, chunkSize) {
+    let slicedArr = [];
+    const finalArr = [];
+    for(let i=0; i<arr.length; i++) {
+        if (slicedArr.length < chunkSize) {
+            slicedArr.push(arr[i]);
+            if (i == arr.length - 1) {
+                finalArr.push(slicedArr);
+            }
+        } else {
+            finalArr.push(slicedArr);
+            slicedArr = [];
+            slicedArr.push(arr[i]);
+        }
+    }
+    
+    console.log(finalArr);
+}
+
+chunkArray([10, 15, 20, 25, 30, 11], 4);
+
+// ============================================================
+
+// Can you write a function in JavaScript to create a countdown from a given number?
+
+// Sol-1.
+function countDown(n) {
+    const cdArr = Array.from({ length: n }, (_, i) => n - i);
+    return cdArr;
+}
+
+// console.log(countDown(5));
+
+// Sol-2.
+function countD(n) {
+    arr = [];
+    while(n > 0) {
+        arr.push(n);
+        n--;
+    }
+    return arr;
+}
+
+// console.log(countD(10));
+
+// =======================================================
+
+// Q. Can you write a function in JavaScript to convert a string to an integer while handling non-numeric characters gracefully?
+
+// Sol.
+function strToInt(str) {
+    console.log(typeof +str)
+    return (+str === +str ? +str : 0)
+}
+
+// console.log(strToInt("1234"))
+// console.log(strToInt("abcd"))
+
+// =======================================================
+
+// Q. Can you write a function in JavaScript to convert a decimal number to its binary representation?
+// Sol.
+function decimalToBinary(num) {
+    return num.toString(2);
+}
+
+// console.log(decimalToBinary(11))
+
+// =======================================================
+
+// Q. Can you write a function in JavaScript to calculate the factorial of a given non-negative integer?
+// Sol-1.
+
+function factorial(n) {
+    return (n === 0 || n === 1 ? 1 : n * factorial(n-1))
+}
+
+// console.log(factorial(6));
+
+// Sol-2.
+function fact(n) {
+    const f = Array.from({ length: n }, (_, i) => i+1).reduce((acc, num) => acc*num, 1) ;
+    console.log(f)
+}
+
+// console.log(fact(5))
+
+// =======================================================
+
+// Q. Write a concise function to safely access a deeply nested property of an object without throwing an error if any intermediate property is undefined.
+function ObjAcc(obj, path) {
+    const dAccess = (obj, path) => path.split('.').reduce((acc, key) => {
+            console.log('acc - ', acc[key]);
+            acc && acc[key]
+        }, obj)
+    // .reduce((acc, key) => console.log('acc - ', acc), obj)
+    return dAccess;
+}
+
+// console.log(ObjAcc({ a: { b: { c: 42 } } }, "a.b.c"));
+
+// =======================================================
+
+// Q. Can you write a function in JavaScript to generate a random integer between a specified minimum and maximum value (inclusive)?
+// Sol.
+function randomInt(min, max) {
+    return Math.floor(Math.random() * (max - min + 1) + min);
+}
+
+console.log(randomInt(5, 10));
+
+// =======================================================
+
+// Q. Can you write a function in JavaScript to rename a specific property in an object?
+// Sol.
+function replacePropName(obj, oldName, newName) {
+    obj[newName] = obj[oldName];
+    delete obj[oldName];
+    return {...obj};
+}
+
+ob = { firstName: 'John', lastName: 'Doe', age: 30 };
+const resp = replacePropName(ob, 'firstName', 'fName');
+console.log('CHK - ', resp);
+
+// =========================================================
+// Q. Can you write a function in JavaScript to find the second-largest element in an array?
+// Sol.
+function secondLargest(arr) {
+    let max = arr[0];
+    let max2 = 0;
+    for (let i=0; i<arr.length; i++) {
+        if (arr[i] > max) {
+            max2 = max;
+            max = arr[i];
+        }
+    }
+    return max2;
+}
+
+// secondLN = secondLargest([5, 2, 8, 9, 2, 4, 7]);
+// console.log('RES - ', secondLN);
+
+// ======================================================
+// Q. Can you write a JavaScript function to reverse the key-value pairs of an object?
+
+function reverseKeyVal(obj) {
+    return Object.fromEntries(Object.entries(obj).map(([key, val]) => [val, key]))
+}
+
+const res = reverseKeyVal({ a: 1, b: 2, c: 3 })
+console.log(res)
+
+// ========================================================
+// Q. Can you write a concise function in JavaScript to implement a simple debounce function that delays the execution of a given function until after a specified time interval has passed without additional calls?
+// Sol.
+function debounce(func, delay) {
+    let debounceTimeout;
+    return (...args) => {
+        clearTimeout(debounceTimeout);
+        debounceTimeout = setTimeout(() => func(...args), delay)
+    }
+}
+
+const delayedLog = debounce((text) => console.log(text), 1000);
+delayedLog('Hello');
+delayedLog('World');
+
+// ======================================================
+// Q. Can you write a JavaScript function to truncate a given string to a specified length and append “…” if it exceeds that length?
+
+// Sol-1.
+function truncStr(str, maxLen) {
+    return (str.length > maxLen ? str.slice(0, maxLen) + '...' : str);
+}
+
+const res2 = truncStr('Hello world', 7);
+console.log('RES', res2);
+
+// Sol-2.
+function truncateStr(str, maxLen) {
+    return (str.length > maxLen ? str.substring(0, maxLen) + '...' : str);
+}
+
+const res3 = truncateStr('Indonesia', 4);
+console.log('RES', res3);
+
+// ====================================================
+// Q. Can you write a throttle function in JavaScript to implement a simple throttle function that limits the execution of a given function to once every specified time interval?
+// Sol.
+function throttle(func, delay) {
+    let throttled = false;
+    return (...args) => {
+        if (!throttled) {
+            func(...args);
+            throttled = true;
+            setTimeout(() => throttled = false, delay)
+        }
+    }
+}
+
+const throttledLog = throttle((text) => console.log(text), 1000);
+throttledLog('India');
+throttledLog('USA');
+
+// ======================================================
+// Q. Can you write a JavaScript function to check if a given string has all unique characters?
+// Sol-1.
+function uniqueCharChk(str) {
+    return new Set(str).size === str.length;
+}
+
+const chk = uniqueCharChk('india');
+console.log('Chk', chk);
+
+// Sol-2.
+function uniqueCharChk2(str) {
+    strArr = str.split('');
+    cntObj = {};
+    strArr.forEach((item) => {
+        console.log(cntObj[item]);
+        if (!cntObj.item) {
+            cntObj.item = 1
+        } else {
+            return false;
+        }
+    })
+}
+
+const chk2 = uniqueCharChk2('india');
+console.log('Chk2', chk2);
+
+
+
+
+
+
+
+

@@ -1,0 +1,95 @@
+Q1. Explain Temporal Dead Zone.
+Ans - Temporal dead zone (TDZ) was introduced for the first time in the ES6 version of JavaScript. 
+      TDZ is a behavior that occurs when a variable is accessed before it is initialized. It is a 
+      language construct that helps to catch errors as accessing data before initializing it is 
+      incorrect. When let and const keywords are used to declare variables a TDZ may occur.
+
+Q2. What is WeakMap?
+Ans - WeakMap object stores key-value pairs with weakly referenced keys. Keys in WeakMap must only be
+      objects, while values can be arbitrary. Primitive data types cannot be keys in WeakMap. Since 
+      native WeakMap contains weakly referenced keys, these keys can be garbage collected and therefore 
+      references get removed. Also, because of the weak referencing, garbage collection of values in 
+      WeakMap is not prevented. When information about a key is valuable ‘only if’ the key is not garbage
+      collected, WeakMap is useful in mapping keys to the information about them.
+
+      The first difference between Map and WeakMap is that keys must be objects, not primitive values:
+        let weakMap = new WeakMap();
+
+        let obj = {};
+
+        weakMap.set(obj, "ok"); // works fine (object key)
+
+        // can't use a string as the key
+        weakMap.set("test", "Whoops"); // Error, because "test" is not an object
+
+      Now, if we use an object as the key in it, and there are no other references to that object – it will 
+      be removed from memory (and from the map) automatically.  
+
+        let john = { name: "John" };
+
+        let weakMap = new WeakMap();
+        weakMap.set(john, "...");
+
+        john = null; // overwrite the reference
+
+        // john is removed from memory!
+      Compare it with the regular Map example above. Now if john only exists as the key of WeakMap – it will be
+      automatically deleted from the map (and memory).
+      WeakMap does not support iteration and methods keys(), values(), entries(), so there’s no way to get 
+      all keys or values from it.
+      WeakMap has only the following methods:
+        weakMap.set(key, value)
+        weakMap.get(key)
+        weakMap.delete(key)
+        weakMap.has(key)  
+
+Q3. What is WeakSet in JS?
+Ans - WeakSet behaves similarly:
+        It is analogous to Set, but we may only add objects to WeakSet (not primitives).
+        An object exists in the set while it is reachable from somewhere else.
+        Like Set, it supports add, has and delete, but not size, keys() and no iterations.
+        Being “weak”, it also serves as additional storage. But not for arbitrary data, rather for “yes/no” facts.
+        A membership in WeakSet may mean something about the object.
+        For instance, we can add users to WeakSet to keep track of those who visited our site:
+
+        let visitedSet = new WeakSet();
+
+        let john = { name: "John" };
+        let pete = { name: "Pete" };
+        let mary = { name: "Mary" };
+
+        visitedSet.add(john); // John visited us
+        visitedSet.add(pete); // Then Pete
+        visitedSet.add(john); // John again
+
+        // visitedSet has 2 users now
+
+        // check if John visited?
+        alert(visitedSet.has(john)); // true
+
+        // check if Mary visited?
+        alert(visitedSet.has(mary)); // false
+
+        john = null;
+
+        // visitedSet will be cleaned automatically
+        The most notable limitation of WeakMap and WeakSet is the absence of iterations, and the inability to
+        get all current content. That may appear inconvenient, but does not prevent WeakMap/WeakSet from doing
+        their main job – be an “additional” storage of data for objects which are stored/managed at another 
+        place.
+
+## SUMMARY OF WeakMap and WeakSet 
+- WeakMap is Map-like collection that allows only objects as keys and removes them together with associated
+  value once they become inaccessible by other means.
+  WeakSet is Set-like collection that stores only objects and removes them once they become inaccessible by
+  other means.
+  Their main advantages are that they have weak reference to objects, so they can easily be removed by 
+  garbage collector.
+  That comes at the cost of not having support for clear, size, keys, values…
+  WeakMap and WeakSet are used as “secondary” data structures in addition to the “primary” object storage. 
+  Once the object is removed from the primary storage, if it is only found as the key of WeakMap or in a 
+  WeakSet, it will be cleaned up automatically.       
+
+Q4. How to find the OS using JS?
+Ans - To detect OS, we can use navigator.appVersion or navigator,userAgent property of JS.
+   

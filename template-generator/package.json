@@ -1,0 +1,33 @@
+{
+  "name": "template-generator",
+  "version": "1.0.0",
+  "description": "Template Generator",
+  "main": "index.js",
+  "bin": {
+    "template-generator": "./dist/index.js"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "ts-node src/index.ts",
+    "build": "tsc && shx rm -rf dist/templates && shx cp -r src/templates dist"
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/ejs": "^3.1.2",
+    "@types/inquirer": "^8.0.0",
+    "@types/node": "^20.2.1",
+    "@types/shelljs": "^0.8.12",
+    "inquirer": "^8.0.0",
+    "nodemon": "^2.0.22",
+    "shx": "^0.3.4",
+    "ts-node": "^10.9.1",
+    "typescript": "^5.0.4"
+  },
+  "dependencies": {
+    "@inquirer/prompts": "^1.2.2",
+    "ejs": "^3.1.9",
+    "inquirer": "^9.2.5",
+    "shelljs": "^0.8.5"
+  }
+}

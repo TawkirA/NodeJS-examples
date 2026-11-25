@@ -1,0 +1,49 @@
+Q1. Display all the keys and values of a nested object.
+Sol - 
+function ObjKeyVal(obj) {
+    for (let key in obj) {
+        if (typeof obj[key] !== 'object') {
+            console.log('Key - '+ key + '-' + 'Val - '+ obj[key]);
+        } else {
+            ObjKeyVal(obj[key]);
+        }
+    }
+}
+
+Q2. Write a program which can empty a given object.
+Sol -
+function ObjKeyVal(obj) {
+    for (let key in obj) {
+        if (obj.hasOwnProperty(key)) {
+            delete obj[key];
+        }
+    }
+    
+    return obj;
+}
+
+Q3. Create an array of pair of values (key, value) from an object and store it in a map. 
+    Consider the object is not nested.
+Sol - 
+function ObjKeyVal(obj) {
+    const map = new Map(Object.entries(obj));
+    return map;
+}
+
+Q4. Create an object with a property 'marks' which cannot be set to a value less than 0.
+Sol -
+const obj = {
+    _marks: 0,
+    set marks(val) {
+      if (val < 0) throw new Error('Marks cannot be less than 0');
+    
+      this._marks = val;    
+    },
+    get marks() {
+        return this._marks;
+    }
+}
+
+// Set
+obj.marks = 23;
+

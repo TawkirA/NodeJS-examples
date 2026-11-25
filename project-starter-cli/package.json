@@ -1,0 +1,49 @@
+{
+  "name": "project-starter-cli",
+  "version": "1.0.0",
+  "description": "A Command Line Interface ( to automatically setup pre-configured JavaScript and various other frameworks initial project template ) crafted using NodeJS and external third-party library",
+  "main": "src/index.js",
+  "bin": {
+    "@TawkirA/project-starter-cli": "bin/template-grabber",
+    "template-grabber": "bin/template-grabber"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/TawkirA/project-starter-cli.git"
+  },
+  "keywords": [
+    "cli",
+    "command",
+    "line",
+    "interface",
+    "javascript",
+    "react",
+    "generator",
+    "template",
+    "project",
+    "vite",
+    "vue",
+    "auto-generator",
+    "template-grabber",
+    "project-starter-cli"
+  ],
+  "author": "Tawkir Ahmed",
+  "license": "ISC",
+  "dependencies": {
+    "arg": "^5.0.2",
+    "chalk": "^4.1.2",
+    "ejs": "^3.1.9",
+    "esm": "^3.2.25",
+    "execa": "^5.1.1",
+    "inquirer": "^8.0.0",
+    "listr": "^0.14.3",
+    "ncp": "^2.0.0",
+    "pkg-install": "^1.0.0"
+  }
+}

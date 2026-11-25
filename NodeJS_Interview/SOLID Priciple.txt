@@ -1,0 +1,32 @@
+SOLID -
+S - Single Responsibility - this principle states that a class should only have one responsibility. Furthermore, it should only have one reason to change.
+					How does this principle help us to build better software? Let’s see a few of its benefits:
+
+					Testing – A class with one responsibility will have far fewer test cases.
+					Lower coupling – Less functionality in a single class will have fewer dependencies.
+					Organization – Smaller, well-organized classes are easier to search than monolithic ones.
+
+O - Open/Closed (Open for Extension, Closed for Modification) - This principle says, classes should be open for extension but closed for modification. In doing so, we stop ourselves from modifying existing code and causing 														    potential new bugs in an otherwise happy application.
+
+	Let’s explore the concept with a quick code example. As part of a new project, imagine we’ve implemented a Guitar class.
+	public class Guitar {
+    		private String make;
+    		private String model;
+    		private int volume;
+
+    		//Constructors, getters & setters
+	}
+
+	After a few months, we decide the Guitar is a little boring and could use a cool flame pattern to make it look more rock and roll.
+
+	At this point, it might be tempting to just open up the Guitar class and add a flame pattern — but who knows what errors that might throw up in our application.
+	Instead, let’s stick to the open-closed principle and simply extend our Guitar class:
+	public class SuperCoolGuitarWithFlames extends Guitar {
+
+    		private String flameColor;
+
+    		//constructor, getters + setters
+	}
+	By extending the Guitar class, we can be sure that our existing application won’t be affected.
+
+	

@@ -1,0 +1,721 @@
+Q1. How does Node.js handle child threads?
+Ans - Node.js, in its essence, is a single thread process. It does not expose child threads and 
+      thread management methods to the developer. Technically, Node.js does spawn child threads 
+      for certain tasks such as asynchronous I/O, but these run behind the scenes and do not 
+      execute any application JavaScript code, nor block the main event loop.
+
+Q2. How does Node.js support multi-processor platforms, and does it fully utilize all processor 
+    resources?
+Ans - Since Node.js is by default a single thread application, it will run on a single processor 
+      core and will not take full advantage of multiple core resources. However, Node.js provides
+      support for deployment on multiple-core systems, to take greater advantage of the hardware. 
+      The Cluster module is one of the core Node.js modules and it allows running multiple Node.js 
+      worker processes that will share the same port.
+
+Q3. What is typically the first argument passed to a Node.js callback handler?
+Ans - Node.js core modules, as well as most of the community-published ones, follow a pattern 
+      whereby the first argument to any callback handler is an optional error object. If there 
+      is no error, the argument will be null or undefined.
+
+      A typical callback handler could therefore perform error handling as follows:
+        function callback(err, results) {
+            // usually we'll check for the error before handling results
+            if(err) {
+                // handle error somehow and return
+            }
+            // no error, perform standard callback handling
+        }
+
+Q4. What is REPL? What purpose it is used for?
+Ans - REPL stands for (READ, EVAL, PRINT, LOOP). Node js comes with bundled REPL environment. 
+      This allows for the easy creation of CLI (Command Line Interface) applications.
+
+Q5. Whats the difference between setTimeout(fn, 0) and setImmediate(fn)  ?
+Ans - Way back when, Node.js version 0.10 introduced setImmediate, which is equivalent to 
+      setTimeout(fn, 0), but with some slight advantages.
+
+      setTimeout(fn, delay) calls the given callback fn after the given delay has ellapsed 
+      (in milliseconds). However, the callback is not executed immediately at this time, but added 
+      to the function queue so that it is executed as soon as possible, after all the currently 
+      executing and currently queued event handlers have completed. Setting the delay to 0 adds the
+      callback to the queue immediately so that it is executed as soon as all currently-queued 
+      functions are finished.
+
+      setImmediate(fn) achieves the same effect, except that it doesn’t use the queue of functions.
+      Instead, it checks the queue of I/O event handlers. If all I/O events in the current snapshot
+      are processed, it executes the callback. It queues them immediately after the last I/O handler,
+      somewhat like process.nextTick. This is faster than setTimeout(fn, 0).
+
+Q6. What is the preferred method of resolving unhandled exceptions in Node.js?
+Ans - Unhandled exceptions in Node.js can be caught at the Process level by attaching a handler for
+      uncaughtException event.
+
+        process.on('uncaughtException', (err) => {
+        console.log(`Caught exception: ${err}`);
+        });
+      However, uncaughtException is a very crude mechanism for exception handling and may be removed
+      from Node.js in the future. An exception that has bubbled all the way up to the Process level
+      means that your application, and Node.js may be in an undefined state, and the only sensible
+      approach would be to restart everything.
+
+      The preferred way is to add another layer between your application and the Node.js process
+      which is called the domain.
+
+      Domains provide a way to handle multiple different I/O operations as a single group. So, by
+      having your application, or part of it, running in a separate domain, you can safely handle 
+      exceptions at the domain level, before they reach the Process level.
+
+      However, domains have been pending deprecation for a few years—since Node.js 4. It’s possible
+      a more future-proof approach would be to use zones.
+
+Q7. Consider following code snippet:
+    {
+        console.time("loop");
+        for (var i = 0; i < 1000000; i += 1){
+            // Do nothing
+        }
+        console.timeEnd("loop");
+    }      
+    The time required to run this code in Google Chrome is considerably more than the time required 
+    to run it in Node.js. Explain why this is so, even though both use the v8 JavaScript Engine.
+
+Ans - Within a web browser such as Chrome, declaring the variable i outside of any function’s scope
+      makes it global and therefore binds it as a property of the window object. As a result, running
+      this code in a web browser requires repeatedly resolving the property i within the heavily 
+      populated window namespace in each iteration of the for loop.
+
+      In Node.js, however, declaring any variable outside of any function’s scope binds it only to
+      the module’s own scope (not the window object) which therefore makes it much easier and faster
+      to resolve.
+
+      It’s also worth noting that using let instead of var in the for loop declaration can reduce
+      the loop’s run time by over 50%. But such a change assumes you know the difference between 
+      let and var and whether this will have an effect on the behavior of your specific loop.    
+
+Q8. What is “callback hell” and how can it be avoided?
+Ans - “Callback hell” refers to heavily nested callbacks that have become unweildy or unreadable.
+
+      An example of heavily nested code is below:
+
+      query("SELECT clientId FROM clients WHERE clientName='picanteverde';", function(id){
+        query(`SELECT * FROM transactions WHERE clientId=${id}`, function(transactions){
+            transactions.each((transac) => {
+            query(`UPDATE transactions SET value = ${transac.value*0.1} WHERE id=${transac.id}`, (error) => {
+                if(!error){
+                console.log("success!!");
+                }else{
+                console.log("error");
+                }
+            });
+            });
+        });
+      });
+
+      At one point, the primary method to fix callback hell was modularization. The callbacks are 
+      broken out into independent functions which can be called with some parameters. So the first
+      level of improvement might be:
+        const logError = (error) => {
+            if(!error){
+            console.log("success!!");
+            }else{
+            console.log("error");
+            }
+        },
+        updateTransaction = (t) => {
+            query(`UPDATE transactions SET value = ${t.value*0.1} WHERE id=${t.id}, logError);
+        },
+        handleTransactions = (transactions) => {
+            transactions.each(updateTransaction);
+        },
+        handleClient = (id) => {
+            query(`SELECT * FROM transactions WHERE clientId=${id}`, handleTransactions);
+        };
+
+        query("SELECT clientId FROM clients WHERE clientName='picanteverde';",handleClient);
+
+      Even though this code is much easier to read, and we created some functions that we can even
+      reuse later, in some cases it may be appropriate to use a more robust solution in the form of
+      promises. Promises allow additional desirable behavior such as error propagation and chaining.
+      Node.js includes native support for them.
+
+      Additionally, a more supercharged solution to callback hell was provided by generators, as 
+      these can resolve execution dependency between different callbacks. However, generators are
+      much more advanced and it might be overkill to use them for this purpose. To read more about
+      generators you can start with this post.
+
+      However, these approaches are pretty dated at this point. The current solution is to use 
+      async/await—an approach that leverages Promises and finally makes it easy to flatten the
+      so-called “pyramid of doom” shown above.
+
+Q9. EventEmitter in NodeJS.
+Ans - The core of NodeJS is event-driven programming. In NodeJS, we achieve event-driven programming 
+      with the event-emitter class.
+      EventEmitter is a class that helps us create a publisher-subscriber pattern in NodeJS.
+
+      With an event emitter, we can simply raise a new event from a different part of an application,
+      and a listener will listen to the raised event and have some action performed for the event.
+      To create an event emitter, we need to create an instance of the event emitter instance from 
+      the events module in NodeJS.
+        import { EventEmitter } from 'events';
+        const eventEmitter = new EventEmitter();
+      The EventEmitter class comes with a lot of member functions. We can use these member functions 
+      to publish events and listen to them.
+      To publish an event, we use the emit() function, and to listen to an event, we use the on() function.
+        
+        import { EventEmitter } from 'events';
+        const eventEmitter = new EventEmitter();
+
+        // listen to the event
+        eventEmitter.on('myEvent', () => {
+            console.log('Data Received');
+        });
+
+        // publish an event
+        eventEmitter.emit('myEvent');
+
+        Output - Data Received
+
+Q10. Buffer in NodeJS
+Ans - Simply put, a Buffer is a way to store and manipulate binary data in Node.js. Binary data 
+      refers to data that consists of binary values, as opposed to text data, which consists of 
+      characters and symbols. Examples of binary data include images, audio and video files, and
+      raw data from a network.
+
+      Why is this important? The reason is that when you work with binary data, you often need to 
+      manipulate it in-memory, which can be difficult and inefficient using JavaScript’s standard 
+      data structures. For example, you might need to concatenate two binary data streams, slice a 
+      large binary file into smaller pieces, or encode and decode binary data into different 
+      character encodings. This is where Buffers come in: they provide a fast and efficient way to 
+      store and manipulate binary data in Node.js.
+
+Q11. Streams in NodeJS
+Ans - Streams in NodeJS are a sequence of bytes. When a program processes some data it needs to 
+      read all the data into memory and then process it and write out the data back into some 
+      location. However, this approach fails when there is a large amount of data to be processed. 
+      To overcome this problem streaming algorithms are used for processing the data in which the 
+      data is not read all at once instead it ‘flows’ into the program, is processed, and ‘flows’ 
+      out of the program. Here the data is processed in small chunks and the whole data is never 
+      held in memory at once. The data stream can be compared with the example of water flowing in
+      a river where a large amount of water is transported by flowing through the river over time. 
+      Streaming algorithms are more memory efficient and faster. You can read this article to get 
+      a detailed guide on streams.
+
+Q12. Piping in NodeJS
+Ans - Piping in NodeJS is useful when we need to write some data coming from a source stream to 
+      another stream. In such a case we can use the piping algorithms provided by NodeJS instead 
+      of writing our own reading and writing logic. We basically pipe the read stream and write 
+      stream to one another. This can be compared with joining two water bodies using a pipe to
+      transfer water.  
+
+Q13. Event driven programming
+Ans - https://quix.io/blog/what-why-how-of-event-driven-programming#:~:text=Event%2Ddriven%20programming%20(EDP),programs%2C%20sensor%20outputs%2C%20etc.
+
+Q14. First-Class Function
+Ans - A programming language is said to have First-class functions if functions in that language 
+      are treated like other variables. So the functions can be assigned to any other variable or 
+      passed as an argument or can be returned by another function. JavaScript treats function as a
+      first-class citizen. This means that functions are simply a value and are just another type of object.
+
+      Usage of First-Class Function
+        It can be stored as a value in a variable.
+        It can be returned by another function.
+        It can be passed into another function as a parameter.
+        It can also stored in an array, queue, or stack.
+        Also, It can have its own methods and property.
+
+Q15. NodeJS child process.
+And - https://www.geeksforgeeks.org/node-js-child-process/
+
+Q16. Asynchronous in NodeJS
+Ans - https://www.knowledgehut.com/blog/web-development/asynchronous-node-js
+
+Q17. Explain the web application architecture of Node.js
+Ans - Node.js is a JavaScript-based platform that is mainly used to create I/O-intensive web applications 
+      such as chat apps, multimedia streaming sites, etc. It is built on Google Chrome’s V8 JavaScript 
+      engine. A web application is software that runs on a server and is rendered by a client browser that
+      accesses all of the application’s resources through the internet.
+      
+      Node.js Server Architecture: To manage several concurrent clients, Node.js employs a “Single Threaded Event Loop”
+                                   design. The JavaScript event-based model and the JavaScript callback mechanism are 
+                                   employed in the Node.js Processing Model. It employs two fundamental concepts:  
+
+                                   - Asynchronous model
+                                   - Non-blocking of I/O operations
+      These features enhance the scalability, performance, and throughput of Node.js web applications.
+
+      Components of the Node.js Architecture:
+
+      Requests: Depending on the actions that a user needs to perform, the requests to the server can be either
+                blocking (complex) or non-blocking (simple).
+      Node.js Server: The Node.js server accepts user requests, processes them, and returns results to the users.
+      Event Queue: The main use of Event Queue is to store the incoming client requests and pass them sequentially 
+                   to the Event Loop.
+      Thread Pool: The Thread pool in a Node.js server contains the threads that are available for performing 
+                   operations required to process requests.
+      Event Loop: Event Loop receives requests from the Event Queue and sends out the responses to the clients.
+      External Resources: In order to handle blocking client requests, external resources are used. They can be 
+                          of any type ( computation, storage, etc).
+
+      Request Flow -
+      - Users send requests (blocking or non-blocking) to the server for performing operations.
+      - The requests enter the Event Queue first at the server-side.
+      - The Event queue passes the requests sequentially to the event loop. The event loop checks the nature of the
+        request (blocking or non-blocking).
+      - Event Loop processes the non-blocking requests which do not require external resources and returns the 
+        responses to the corresponding clients.
+      - For blocking requests, a single thread is assigned to the process for completing the task by using external
+        resources.
+      - After the completion of the operation, the request is redirected to the Event Loop which delivers the 
+        response back to the client.                   
+
+    Advantages:
+
+    - The Node.js server can efficiently handle a high number of requests by employing the use of Event Queue and
+      Thread Pool.
+    - There is no need to establish multiple threads because Event Loop processes all requests one at a time, 
+      therefore a single thread is sufficient.
+    - The entire process of serving requests to a Node.js server consumes less memory and server resources 
+    - since the requests are handled one at a time.
+
+Q18. Expand on the types of API functions available in Node.js.
+Ans - Types of API functions in Node.js:
+      - Asynchronous, Non-blocking functions: As the name suggests, these functions operate asynchronously. What it
+        means is that when Node.js will make a request for data to the API, it will not get blocked till the data 
+        is received. Instead, it will continue to move to the next API after calling it, and a notification mechanism
+        from a Node.js event will respond to the server for the previous API call. To put it in layman’s terms, these
+        functions allow working further while the request is being handled. Example, emais, online forum 
+      - Synchronous, Blocking functions: Contrary to asynchronous functions, synchronous functions act as blocking 
+        functions. What it means is that these functions will make the calling system wait for a response. Thus, 
+        when a system uses synchronous APIs, it expects to get immediate data when requests are made. These types 
+        of APIs are used where availability and connectivity are high and low latency is expected. To put it in 
+        layman’s terms, the application will request and wait for a response until the value is returned. 
+        Example: Instant messaging, video meetings
+
+Q19. Types of NodeJs module
+Ans - There are three types of Node.js modules.
+      1. Core - The core modules in Node.js are the built-in modules that are installed with the installation of Node
+                to our system. We just use the required statement to access them. Example, fs, http etc.
+      2. Local - The local modules in Node.js are the modules that we create ourselves and make available to be used
+                 in our code. We define the functionality for these modules in a JavaScript file. To use these 
+                 modules, we require them in our code.
+      3. Third-party module - The third-party modules in Node.js are those we install globally or on our local 
+                              machines from external sources, typically via the Node package manager. To install 
+                              them using npm, we can use the following command: npm install <module_name>
+                              Example, express, lodash etc.
+
+Q20. Why is Node.js preferred over Java, PHP, and other backend technologies?
+Ans - why Node is not just good but a better option for backend development.
+
+    - Node.js performs well when it comes to handling a large amount of data in real time. Node.js makes it possible
+      to collect data, visualize it, and show it as dashboards. Note that, HTTP requests and responses are large 
+      streams of data.
+    - Since Node offers numerous functionalities that may be impossible to have in any event-based context, Node.js
+      backend programming is straightforward.
+    - Since Node.js keeps its data in native JSON, NodeJS turns out to be fast.
+    - It is backed by a large community of developers who are always working to make it better. It performs high-level
+      data streaming. Regardless of the underlying operating system, it is also appropriate for creating software 
+      that runs on several platforms.
+    - Since Node.js is non-blocking and offers async functions, it can handle several tasks at once. Because the 
+      procedures are frequently handled in a single thread rather than queuing, they speed up server tasks.
+    - Applications created with Node.js are scalable and have a higher performance level.
+    - It's simple to learn Node.js. Node.js developers are becoming more prevalent, which lowers development expenses
+    - when you hire NodeJS experts. You can follow several tips for hiring the NodeJS developer team, which will help
+      you reduce your costs.
+
+Q21. Explain the various types of HTTP requests.
+Ans - The most commonly used HTTP request methods are GET, POST, PUT, PATCH, and DELETE. These are equivalent to the
+      CRUD operations (create, read, update, and delete).
+      GET: GET request is used to read/retrieve data from a web server. GET returns an HTTP status code of 200 (OK)
+           if the data is successfully retrieved from the server.
+      POST: POST request is used to send data (file, form data, etc.) to the server. On successful creation, it
+            returns an HTTP status code of 201.
+      PUT: A PUT request is used to modify the data on the server. It replaces the entire content at a particular
+           location with data that is passed in the body payload. If there are no resources that match the request,
+           it will generate one.
+      PATCH: PATCH is similar to PUT request, but the only difference is, it modifies a part of the data. It will 
+             only replace the content that you want to update.
+      DELETE: A DELETE request is used to delete the data on the server at a specified location.
+
+Q22. State the advantages of using promises overusing callbacks.
+Ans - Promises and callbacks are like reliable friends in the world of programming, ensuring smooth communication 
+      between different parts of a computer program. A promise is a commitment that a certain task will be completed,
+      whether it succeeds or fails, allowing developers to handle results seamlessly. On the other hand, callbacks
+      are functions passed as arguments, executed when a specific task concludes. Using promises instead of 
+      callbacks comes with several advantages, making your coding experience smoother and more human-friendly.
+
+      1. Readability and Maintainability:
+         Promises provide a cleaner and more readable syntax compared to callbacks. The code structure becomes more
+         linear and easier to follow, making it simpler for you and your team to understand and maintain.
+      2. Elimination of Callback Hell:
+         With promises, you avoid the notorious "Callback Hell" or "Pyramid of Doom," where nested callbacks lead to
+         code that's difficult to read and comprehend. Promises allow you to handle asynchronous operations more 
+         gracefully, enhancing the overall structure of your code.
+      3. Error Handling:
+         Promises have built-in error handling, making it easier to catch and handle errors that might occur during
+         asynchronous operations. This results in more robust and reliable code, as error management is an integral
+         part of the promise structure.
+      4. Chaining and Sequencing:
+         Promises facilitate the chaining of asynchronous operations, making it straightforward to sequence multiple
+         tasks. This chaining capability enhances the clarity of your code, providing a more logical flow when 
+         dealing with dependent asynchronous tasks.
+      5. Simplicity in Design:
+         Promises simplify the design of your code. They abstract away some of the complexities associated with 
+         callbacks, allowing you to focus on the logic of your application rather than managing the flow of 
+         asynchronous operations.
+      6. Single Execution Path:
+         Promises ensure a single execution path, making it easier to understand the order of operations. This
+         predictability contributes to the reliability of your code and reduces the chances of unexpected 
+         behaviors.
+      7. Global Error Handling:
+         Promises provide a centralized mechanism for error handling. You can attach a single .catch() block at 
+         the end of a promise chain to capture any errors that may have occurred at any point within the chain. 
+         This simplifies error tracking and debugging.
+      8. Promotes a More Humanized Flow:
+         Promises contribute to a more natural and humanized flow of code. The logic becomes more akin to 
+         synchronous code, allowing developers to express the intended sequence of operations without being 
+         interrupted by callback-related complexities.
+
+Q23. Name and explain some of the flags used in file read/write operations.
+Ans - The syntax of fs.open is fs.open(path, flags[, mode], callback) where [,mode] is optional. Their detailed 
+      explanation is as follows :
+
+      Path : The relative path of the file to be opened from the current working directory.
+      Flags : they can be one of the following : r, r+ , rs+ , w , w+ , wx , wx+ , a , a+ , ax , ax+
+      r : It is used to open the file for reading but an exception is caused if we try to open a file which does 
+          not exists.
+      r+ : It is used to open the file for reading and writing but an exception is caused if we try to open a file
+           which does not exists.
+      rs+ : It is used to open the file for reading and writing in Synchronous mode.It also instructs the OS to 
+            bypass the local file system cache . Moreover it is recommended not to use it unless you have no other choce because it affects the I/O performance. And It will not transforms fs.open() into a synchronous function. If that is what you want , you must use fs.openSync() which is explained later in this article.
+
+      w : It is used to open the file for writing. It will create the file if the file is non-existing and also if
+          the file with the given name exists it will truncate it that it will delete all its content and provide us with a empty file.
+
+      wx : Just like w, It is also used to open the file for writing. It will also create the file if the file is
+           non-existing but if the file already exists it will fail and throw an error.
+
+Q24. Differentiate between readFile and createReadStream.
+Ans - Both are modules that allow us to open a file/stream and read data present in it.
+      readFile: fs module contains the readFile method. It is used to read a file by bringing it into the buffer. 
+      It is an asynchronous method and due to this, it reads the file without blocking the execution of the code. 
+      First, we bring the fs module into our app then use the readFile method inside it.
+      
+      fs.readFile( filename, encoding, callback_function)
+      
+      filename: It holds the path to the file which has to be read.
+      encoding: It holds the encoding of the file. If no option is specified, then the raw buffer is returned, 
+                Default value is ‘utf8’.
+      callback_function: It is a function that gets called after reading the file and contains two parameters err
+                         and data. If any error is encountered then it gets stored in err else content of the file
+                         is stored in data.
+
+      createReadStream: fs module contains the inbuilt API(Application programming interface) createReadStream.It 
+                        allows us to open a file/stream and reads the data present inside it. 
+
+      fs.createReadStream(path, options)
+
+      path: It holds the path to the file which has to be read. It could be the string, URL of the buffer.
+      options: It is an optional parameter. We can pass a string or object to it.
+      Return Value: It returns the object of ReadObject Stream.
+
+      readFile                                                 createReadStream
+
+      It reads the file into the memory before making          It reads the file in chunks according to a need by the user.
+      it available to the user.
+
+      It is slower due to read of whole file.                  It is faster due to its property of bringing in chunks.
+	
+      It will not scale in case of too many requests           It is scalable as it pipes the content directly to the HTTP
+      as it will try to load them all at the same time.        response object.
+
+      Due to its property, it is easier for nodejs to          In this case memory cleaning by nodejs is not easy.
+      handle cleaning of memory in this case.
+
+Q25. What does the TTY module in Node.js contain?
+Ans - The Node.js TTY module contains tty.ReadStream and tty.WriteStream classes. In most cases, there is no need to use this module directly.
+      You have to use require ('tty') to access this module.
+      var tty = require('tty'); 
+      When Node.js discovers that it is being run inside a TTY context, then
+      - process.stdin will be a tty.ReadStream instance
+      - process.stdout will be a tty.WriteStream instance
+
+Q26. Does Node.js supports cryptography?
+Ans - The Node. js crypto module offers cryptographic operations. A hash is a fixed-length string of bits generated
+      from any arbitrary block of source data using some technique and specified stages. Ciphers enable you to 
+      encrypt and decrypt messages using a password.
+
+Q27. What does the control flow function do and how does it work?
+And - The control flow is the order in which the computer executes statements in a script.
+      Code is run in order from the first line in the file to the last line, unless the computer runs across the
+      (extremely frequent) structures that change the control flow, such as conditionals and loops.
+
+Q28. What are the advantages and disadvantages of Node.js?
+Ans - Advantages
+      1. It provides fast delivery -
+         Node.js is a proven way to make the time-to-market cycle shorter. And there are technical reasons for that,
+         which make it one of the crucial benefits of Node.js.
+
+         - First of all, Node.js is a lightweight runtime. It uses an asynchronous, event-driven I/O model which 
+           ensures that almost no function in Node.js directly performs I/O. This time-saving operation cuts down the
+           time developers spend on deploying an application.
+         - Node.js offers both client-side and server-side in JavaScript. It means that applications written in 
+           Node.js require fewer files and less code as developers can reuse it for the frontend and backend parts 
+           of an application. As a result, Node.js developers deliver faster results and it’s possible to cut down
+           on personnel hours by hiring a team of full-stack developers — instead of separately bringing on a 
+           frontend and backend developer(s).
+         - The fact that Node.js is powered by the V8 engine by Google Chrome is beneficial itself. It compiles
+           JavaScript to machine code before executing it which results in faster development. Google makes significant
+           investments in the V8 engine improving its efficiency and security, which is why developers have more
+           chances to deploy stable and high-performance applications.
+      2. It offers easy scalability - 
+         Using Node.js is a crucial advantage for organizations that want to grow and scale their product.
+
+         One way this is possible is because Node.js supports microservices architecture. An application built with 
+         microservices consists of separate small blocks that perform one function. Each small block receives 
+         information, computes it, and delivers the result. If you want to scale up an application, it is easier 
+         and faster to add more microservices on top of the existing ones instead of changing the entire 
+         application. This is what makes microservice architecture stand out from monolithic architecture, where 
+         an application is heavily based on a single database.
+
+         Node.js supports event-driven programming which is one of its benefits, too. If your website witnesses
+         high traffic and you’re using the framework, you can be assured it happens without sacrificing performance
+         or accuracy. Node.js is able to quickly adapt to such increases because it spawns additional threads 
+         called event loops. Each thread runs in parallel on its own CPU, and Node.js uses all available cores at
+         once instead of relying on fewer cores like some other software programs do.
+
+         The caching feature is also helpful for companies that tend to scale their businesses. Without it, the
+         server of the application will have to execute the entire code and retrieve data every time it processes a 
+         request. To avoid this, developers use caching services, which increase the response time and improve the 
+         database performance in general.   
+      3. It targets all major platforms - 
+         Among the advantages of using Node.js is its cross-platform support. Applications built with Node.Js can
+         easily target all major platforms, including Windows, Linux, and macOS — all with one code base.
+
+         Developers recommend using frameworks like Electron or NW.js to build cross-platform real time web 
+         applications. These ready-to-go solutions release developers from writing separate codes for different
+         platform versions.
+      4. It offers long-term support for enterprises
+         While software developers are used to rapid changes, businesses seek stability and long-term support.
+
+         Here is how Node.js deals with that.
+
+         First, Node.js has its long term support (LTS) policy that clarifies release schedules and provides a time
+         frame within which a given version will be supported. The point of having this policy is to provide a 
+         stable and predictable release cycle so that development teams could prepare in advance. This is what 
+         enterprise companies and operations teams seek for their web development purposes.
+         LTS support is one of the reasons why Node.js is still popular among corporate organizations.
+
+         Second, back in 2015 the Node.js Foundation was announced; its idea was to unite developers from SAP, 
+         Fidelity, IBM, and Microsoft to contribute to the development of Node.js all together. Their motto was to
+         give assurance of innovation and continuity without risk. They even created a few initiatives — Node 
+         Security Platform, a tool that allows continuous security monitoring for apps built with Node.js; and Node
+         Interactive, which is a series of conferences for Node.js users.
+         In 2018, the Node.js Foundation was merged with the JS Foundation; it’s now called the OpenJS Foundation. 
+         Their mission has become broader but is still oriented around the promotion of JavaScript and its 
+         ecosystem by hosting different projects and funding activities.
+
+         Third, there is the famous Node Package Manager (NPM), which is an online database of public and paid-for
+         private packages. With more than 836,000 packages available for download, software development teams can 
+         get a variety of features and integrate them into their applications instead of building them from scratch. In fact, NPM hosts the largest and most active community of open source libraries that has ever existed.
+         There is a set of packages available for enterprise companies that run behind the company’s firewall. 
+         They come with a private registry and high-end security features. But most importantly, they secure 
+         enterprises from unsafe and unreliable code, guarding against vulnerabilities and facilitating the various
+         access permissions enterprises need.
+      5. It is quick to adapt & easy to learn - 
+         Node.js is based on JavaScript, one of the most widely used languages among developers.
+
+         If a developer has JavaScript skills, it is relatively easy to initiate migration to Node.js for backend
+         development. This fact attracts new developers to start learning this runtime environment, especially when
+         it’s so relatively easy to learn.
+
+      Disadvantages -
+      1. Its performance is reduced with heavy computational tasks -
+         Node.js is unable to process heavy CPU-bound tasks, and this is arguably one of the biggest drawbacks of 
+         Node.js.
+
+         When Node.js receives a huge CPU-based task in the event loop, it utilizes all available CPU firepower to
+         process the request, and then answer other requests in the queue. Because of that, the overall event loop
+         slows down and it affects the application’s interface overall.
+
+         In 2018, Node.js introduced the worker threads module, allowing developers to execute multiple threads at
+         the same time. With this feature, developers can solve occurring CPU-bound tasks more conveniently. 
+         However, it is still hard to name Node.Js a heavy-computation-friendly technology.  
+      2. It lacks library support -
+         You already know from the upper section that Node.js has a large amount of packages and modules inside the
+         Node Package Manager. However, the NPM lacks a library system in contrast with other programming languages.
+         For example, many registries have poor documentation and quality code or remain in unfinished status. 
+         Unfortunately, there is no monitoring system to recognize these files and remove them from a library, 
+         which makes it one of the serious limitations of Node.js.
+      3. It has tons of nested callbacks -
+         Node.js relies heavily on callbacks. It is a function that runs after a task in the queue is 
+         finished, allowing other code to run in the meantime. However, with a number of tasks in the 
+         queue — each with its own callback — it can lead to callback hell. It’s a situation when 
+         callbacks get nested within one another causing complexity in understanding and maintaining the 
+         code.
+
+         The developers' community says that callback hell is a sign of a lack of experience within teams
+         and poor coding standards that they follow. The solution to it is to refactor and simplify code.
+      4. It has an unstable API -
+         Node.js implements changes frequently connected to its API. The issue is that those changes are
+         generally backward-incompatible with previous versions. Meaning that developers have to spend 
+         their time crafting solutions that could work with these APIs over again, spending additional 
+         time and at extra cost. This is why an unstable API is considered one of the key Node.js 
+         limitations.
+      
+https://www.turing.com/interview-questions/node-js
+
+
+Q1. What is a first class function in Javascript?
+Ans - When functions can be treated like any other variable then those functions are first-class functions. There are many other programming languages, for example, scala, Haskell, etc which follow this including JS.
+         Now because of this function can be passed as a param to another function(callback) or a function can return another function(higher-order function). map() and filter() are higher-order functions that are 
+         popularly used.
+
+Q2. What is Node.js and how it works?
+Ans - NodeJS is an open source javascript runtime environment which and runs the V8 JavaScript engine, the core of Google Chrome, outside of the browser. NodeJS follow event-driven architecture where I/O runs asynchronously making it lightweight and efficient. A Node.js app runs in a single process, without creating a new thread for every request. When Node.js performs an I/O operation, like reading from the network, 
+accessing a database or the filesystem, instead of blocking the thread and wasting CPU cycles waiting, Node.js will resume the operations when the response comes back. This allows Node.js to handle thousands of
+concurrent connections with a single server without introducing the burden of managing thread concurrency, which could be a significant source of bugs. 
+
+Q3. How do you manage packages in your node.js project?
+Ans - It can be managed by a number of package installers and their configuration file accordingly. Out of them mostly use npm or yarn. Both provide almost all libraries of javascript with extended features of controlling environment-specific configurations. To maintain versions of libs being installed in a project we use package.json and package-lock.json so that there is no issue in porting that app to a different environment.
+
+Q4. Why use Node.js?
+Ans - Node.js makes building scalable network programs easy. Some of its advantages include:
+	It is generally fast
+	It rarely blocks
+	It offers a unified programming language and data type
+	Everything is asynchronous 
+	It yields great concurrency
+
+Q5. Why is Node.js Single-threaded?
+And - Node.js is single-threaded for async processing. By doing async processing on a single-thread under typical web loads, more performance and scalability can be achieved instead of the typical thread-based implementation.
+
+Q6. If Node.js is single-threaded, then how does it handle concurrency?
+Ans - The Multi-Threaded Request/Response Stateless Model is not followed by the Node JS Platform, and it adheres to the Single-Threaded Event Loop Model. The Node JS Processing paradigm is heavily influenced by the JavaScript Event-based model and the JavaScript callback system. As a result, Node.js can easily manage more concurrent client requests. The event loop is the processing model's beating heart in Node.js.
+
+Q7. Explain callback in Node.js.
+Ans - A callback function is called after a given task. It allows other code to be run in the meantime and prevents any blocking.  Being an asynchronous platform, Node.js heavily relies on callback. All APIs of Node are written to support callbacks.
+
+Q8. What are the advantages of using promises instead of callbacks?
+Ans - The control flow of asynchronous logic is more specified and structured.
+The coupling is low.
+We've built-in error handling.
+Improved readability.
+
+Q9. How is Node.js most frequently used?
+Ans - Node.js is widely used in the following applications:
+
+Real-time chats
+Internet of Things
+Complex SPAs (Single-Page Applications)
+Real-time collaboration tools
+Streaming applications
+Microservices architecture
+
+Q10. What are the modules in Node.js?
+Ans - In Node.js, a module encapsulates all related codes into a single unit of code that can be parsed by moving all relevant functions into a single file. You may export a module with the module and export the function, which lets it be imported into another file with a needed keyword.
+
+Q11. Why is Node.js preferred over other backend technologies like Java and PHP?
+Ans - Some of the reasons why Node.js is preferred include:
+
+Node.js is very fast
+Node Package Manager has over 50,000 bundles available at the developer’s disposal
+Perfect for data-intensive, real-time web applications, as Node.js never waits for an API to return data
+Better synchronization of code between server and client due to same code base
+Easy for web developers to start using Node.js in their projects as it is a JavaScript library
+
+Q12. Difference between microtask and macrotask queue in the event loop
+Ans - The event loop is a mechanism that allows JavaScript to execute asynchronous code in a single-threaded environment. It works by constantly checking two queues: the microtask queue and the macrotask queue. These queues store the callbacks of the asynchronous operations that are waiting to be executed.
+
+setTimeout(function() {
+  console.log("Hello after 3 seconds");
+}, 3000);
+
+The callback function in this example will be executed after 3 seconds, but not immediately. It will be placed in the macrotask queue, and will wait for its turn to run.
+
+What is the difference between microtask and macrotask queue?
+The main difference between microtask and macrotask queue is their priority. The event loop always gives higher priority to the microtask queue, and will process all the callbacks in the microtask queue before moving on to the macrotask queue.
+
+The microtask queue contains the callbacks of operations that are considered more urgent or important, such as promises and mutation observers APIs.
+
+The macrotask queue contains the callbacks of operations that are less urgent such as timers, I/O events, and user interface events.
+
+console.log("Start");
+
+setTimeout(function() {
+  console.log("Timeout");
+}, 0);
+
+Promise.resolve().then(function() {
+  console.log("Promise"); // microTask!
+});
+
+console.log("End");
+
+What do you think will be the output of this code? You might expect it to be:
+
+Start -> Timeout -> Promise -> End
+
+But actually, it will be:
+
+Start -> End -> Promise -> Timeout
+
+Let's decode step by step:
+
+Because the callback of setTimeout is placed in the macrotask queue, while the callback of Promise.resolve is placed in the microtask queue.
+
+The event loop will first execute the synchronous code (console.log("Start") and console.log("End"))
+Then it will check the microtask queue and execute all the callbacks there (console.log("Promise"))
+Then it will check the macrotask queue and execute one callback there (console.log("Timeout")).
+
+Why to know the difference is important?
+Understanding the difference between microtask and macrotask queue can help you write better asynchronous code in JavaScript. It can help you avoid some common mistakes such as:
+
+Blocking the event loop by creating too many microtasks or long-running microtasks. This can cause performance issues and delay other important tasks.
+Creating race conditions or unexpected results by relying on the order of execution of different types of tasks. For example, if you use setTimeout to schedule some code after a promise, you cannot guarantee that the promise will resolve before the timeout.
+For example, if you use setTimeout with a delay of 0 milliseconds to defer some code execution, you might miss some events that happen in between.
+To avoid these mistakes follow some best practices, such as:
+
+Use promises or async/await instead of callbacks whenever possible. Promises are easier to read, write, and debug than nested callbacks. They also allow you to handle errors more easily.
+Use queueMicrotask instead of setTimeout with a very small delay. These methods are more reliable and efficient than setTimeout, as they schedule a microtask without any delay.
+
+Micro Task -
+  		 	Promise callbacks (.then, .catch, .finally)
+			Mutation Observer API
+			process.nextTick
+			queueMicroTask function
+			async / await 
+Macro Task -
+			setTimeout, setInterval
+			DOM manipulation and redering
+			I/O Ops
+			Network Requests (XMLHttpRequest, fetch)
+			Event Handlers
+
+Q13. Throttling in JavaScript
+Ans - Throttling is a technique that limits how often a function can be called in a given period of time. It is useful for improving the performance and responsiveness of web pages that have event listeners that trigger heavy or expensive operations, such as animations, scrolling, resizing, fetching data, etc.
+
+For example, if you have a function that fetches some data from an API every time the user scrolls the page, you might want to throttle it so that it only makes one request every second, instead of making hundreds of requests as the user scrolls. This way, you can avoid overloading the server or the browser with unnecessary requests and reduce the bandwidth consumption.
+
+How to Implement Throttling in JavaScript?
+There are several ways to implement throttling in JavaScript. One common approach is to use a timer function such as setTimeout or difference of time method (old method) to wrap the function being throttled. The timer function can be used to enforce a delay between calls to the throttled function, allowing it to be called only once within the specified time period.
+
+Why Use Throttling?
+Throttling can improve the performance and user experience of web pages by reducing the number of unnecessary or redundant operations. It can also prevent some issues such as:
+
+Overloading the server or the browser with too many requests or calculations
+Exceeding the rate limits or quotas of APIs or services
+Wasting bandwidth or resources on operations that are not visible or relevant to the user
+Creating janky or laggy animations or interactions
+
+When to Use Throttling?
+Throttling is suitable for scenarios where you want to limit how often a function can be called, but you don’t want to miss any calls. For example, you might want to use throttling for:
+
+Fetching data from an API or a database when the user scrolls, resizes, or types
+Updating or animating elements on the page when the user scrolls, resizes, or moves the mouse
+Logging or tracking user actions or events when they occur frequently
+
+
+
+         
+  
+

@@ -1,0 +1,26 @@
+{
+  "name": "nodejs-express-graphql",
+  "version": "1.0.0",
+  "description": "nodeJS-express-graphql",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "nodemon app.js"
+  },
+  "keywords": [
+    "graphql",
+    "nodeJs",
+    "expressJS"
+  ],
+  "author": "Tawkir Ahmed",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.18.3",
+    "express-graphql": "^0.12.0",
+    "graphql": "^16.8.1",
+    "mongoose": "^8.2.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.0"
+  }
+}

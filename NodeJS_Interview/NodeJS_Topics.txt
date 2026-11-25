@@ -1,0 +1,82 @@
+AWS - 
+
+NodeJS -  Whats is request throttling?
+
+		what is the difference between threading and concurrency?
+		https://www.scaler.com/topics/nodejs/
+		https://www.tutorialspoint.com/nodejs/index.htm	
+		
+		1. Understand the Basics:
+		Know the fundamentals of Node.js, including event-driven programming, asynchronous I/O, and the event loop.
+		Understand the CommonJS module system and how it is used in Node.js.
+
+		2. JavaScript:
+		Brush up on core JavaScript concepts, as Node.js is built on it.
+		Understand closures, callbacks, promises, and async/await.
+		Know ES6+ features such as arrow functions, classes, and destructuring.
+
+		3. Node.js Modules:
+		Understand the module system in Node.js.
+		Know how to create and use modules.
+		Familiarize yourself with built-in modules like fs and http.
+
+		4. npm (Node Package Manager):
+		Know how to use npm commands.
+		Understand package.json and its role in managing dependencies.
+
+		5. Web Frameworks:
+		If you're applying for web development positions, be familiar with popular Node.js web frameworks like Express.js.
+		Understand routing, middleware, and templating engines.
+
+		6. Asynchronous Programming:
+		Master asynchronous programming in Node.js using callbacks, promises, and async/await.
+		Be comfortable with handling callbacks and error handling.
+
+		7. RESTful APIs:
+		Understand how to design and consume RESTful APIs.
+		Know HTTP methods, status codes, and request/response formats.
+
+		8. Database Knowledge:
+		Be familiar with databases commonly used with Node.js, such as MongoDB or MySQL.
+		Understand how to perform CRUD operations and work with databases asynchronously.
+
+		9. Testing:
+		Know the basics of testing in Node.js using frameworks like Mocha or Jest.
+		Understand unit testing and integration testing.
+
+		10. Security:
+		Understand common security practices, such as input validation, authentication, and authorization.
+		Be aware of common security vulnerabilities and how to mitigate them.
+
+		11. Deployment:
+		Familiarize yourself with deploying Node.js applications.
+		Know about tools like Docker and containerization.
+
+		12. Advanced Topics (Optional):
+		If you have time, delve into more advanced topics like streaming, event emitters, and performance optimization.
+
+		13. Practice:
+		Code regularly to reinforce your understanding.
+		Work on small projects and exercises.
+
+		14. Behavioral Questions:
+		Be prepared to answer questions about your previous projects and experiences.
+
+		15. Stay Updated:
+		Keep up with the latest trends and updates in Node.js and JavaScript.
+
+		16. Mock Interviews:
+		Practice with mock interviews to simulate the interview environment.
+
+ReactJS -  https://www.freecodecamp.org/news/prepare-for-react-technical-interviews/
+		https://www.algochurn.com/problems
+		https://www.freecodecamp.org/news/react-interview-questions-and-answers/
+Angular - 
+
+Gen AI - 
+
+Webpack - 
+
+TypeScript - 1. How to prevent array from being changed in TypeScript (Ans - using readonly e.g., const names: readonly string[] = ["Dylan"];)
+		    2. What is type Alias?
+		    3. Which one is better to use 'unknown' or 'any'? (Ans - unknown as it does not allow unknow value but any allow anything)
